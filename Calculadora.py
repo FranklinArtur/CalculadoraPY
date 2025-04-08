@@ -3,6 +3,7 @@ from tkinter import messagebox
 import math
 from fractions import Fraction
 from sympy import symbols, Eq, solve
+from sympy import simplify
 from sympy.parsing.sympy_parser import parse_expr
 
 def calcular_basico():
@@ -45,15 +46,17 @@ def calcular_bhaskara():
     except ValueError:
         messagebox.showerror("Erro", "Digite valores numéricos válidos!")
 
+
 def calcular_expressao_algebrica():
     try:
         expressao = entry_expressao.get()
-        resultado = parse_expr(expressao).evalf()
-        messagebox.showinfo("Resultado", f"Resultado: {resultado}")
+        resultado = simplify(parse_expr(expressao))
+        messagebox.showinfo("Resultado", f"Expressão simplificada: {resultado}")
     except SyntaxError:
         messagebox.showerror("Erro", "Erro de sintaxe! Verifique a expressão e tente novamente.")
     except Exception as e:
         messagebox.showerror("Erro", f"Expressão inválida!\nErro: {e}")
+
 
 def calcular_regra_de_tres():
     try:
@@ -82,8 +85,19 @@ def verificar_conjuntos():
         interseccao = conjunto1.intersection(conjunto2)
         diferenca = conjunto1.difference(conjunto2)
         simetrica = conjunto1.symmetric_difference(conjunto2)
-        subconjunto = conjunto1.issubset(conjunto2)
-        messagebox.showinfo("Resultado", f"União: {uniao}\nInterseção: {interseccao}\nDiferença: {diferenca}\nDiferença Simétrica: {simetrica}\nConjunto 1 é subconjunto do Conjunto 2? {subconjunto}")
+        subconjunto = "Sim" if conjunto1.issubset(conjunto2) else "Não"
+
+        def formatar(conjunto):
+            return ', '.join(map(str, sorted(conjunto))) if conjunto else "Nenhum elemento"
+
+        messagebox.showinfo(
+            "Resultado",
+            f"União: {formatar(uniao)}\n"
+            f"Interseção: {formatar(interseccao)}\n"
+            f"Diferença: {formatar(diferenca)}\n"
+            f"Diferença Simétrica: {formatar(simetrica)}\n"
+            f"Conjunto 1 é subconjunto do Conjunto 2? {subconjunto}"
+        )
     except ValueError:
         messagebox.showerror("Erro", "Digite valores inteiros separados por vírgula!")
 
@@ -96,17 +110,22 @@ def resolver_sistema_linear():
         b2 = float(entry_sistema_b2.get())
         c2 = float(entry_sistema_c2.get())
 
-        eq1 = Eq(a1 * symbols('x') + b1 * symbols('y'), c1)
-        eq2 = Eq(a2 * symbols('x') + b2 * symbols('y'), c2)
+        x, y = symbols('x y')
+        eq1 = Eq(a1 * x + b1 * y, c1)
+        eq2 = Eq(a2 * x + b2 * y, c2)
 
-        resultado = solve((eq1, eq2), (symbols('x'), symbols('y')))
-        messagebox.showinfo("Resultado", f"Solução do Sistema Linear: x = {resultado[symbols('x')]}, y = {resultado[symbols('y')]}")
+        resultado = solve((eq1, eq2), (x, y))
+
+        if resultado:
+            messagebox.showinfo("Resultado", f"Solução do Sistema Linear:\nx = {resultado[x]}, y = {resultado[y]}")
+        else:
+            messagebox.showwarning("Resultado", "O sistema não possui solução única.")
     except ValueError:
         messagebox.showerror("Erro", "Digite valores numéricos válidos!")
 
 root = tk.Tk()
 root.title("Calculadora Avançada")
-root.geometry("500x500")
+root.geometry("500x550")
 
 frame_basico = tk.LabelFrame(root, text="Operações Básicas")
 frame_basico.pack(pady=5)
@@ -167,18 +186,30 @@ tk.Button(frame_conjuntos, text="Calcular", command=verificar_conjuntos).pack()
 
 frame_sistema_linear = tk.LabelFrame(root, text="Sistema Linear")
 frame_sistema_linear.pack(pady=5)
-entry_sistema_a1 = tk.Entry(frame_sistema_linear, width=5)
+linha1 = tk.Frame(frame_sistema_linear)
+linha1.pack()
+tk.Label(linha1, text="a1").pack(side=tk.LEFT, padx=2)
+entry_sistema_a1 = tk.Entry(linha1, width=5)
 entry_sistema_a1.pack(side=tk.LEFT)
-entry_sistema_b1 = tk.Entry(frame_sistema_linear, width=5)
+tk.Label(linha1, text="x +").pack(side=tk.LEFT)
+tk.Label(linha1, text="b1").pack(side=tk.LEFT, padx=2)
+entry_sistema_b1 = tk.Entry(linha1, width=5)
 entry_sistema_b1.pack(side=tk.LEFT)
-entry_sistema_c1 = tk.Entry(frame_sistema_linear, width=5)
+tk.Label(linha1, text="y =").pack(side=tk.LEFT)
+entry_sistema_c1 = tk.Entry(linha1, width=5)
 entry_sistema_c1.pack(side=tk.LEFT)
-entry_sistema_a2 = tk.Entry(frame_sistema_linear, width=5)
+linha2 = tk.Frame(frame_sistema_linear)
+linha2.pack(pady=5)
+tk.Label(linha2, text="a2").pack(side=tk.LEFT, padx=2)
+entry_sistema_a2 = tk.Entry(linha2, width=5)
 entry_sistema_a2.pack(side=tk.LEFT)
-entry_sistema_b2 = tk.Entry(frame_sistema_linear, width=5)
+tk.Label(linha2, text="x +").pack(side=tk.LEFT)
+tk.Label(linha2, text="b2").pack(side=tk.LEFT, padx=2)
+entry_sistema_b2 = tk.Entry(linha2, width=5)
 entry_sistema_b2.pack(side=tk.LEFT)
-entry_sistema_c2 = tk.Entry(frame_sistema_linear, width=5)
+tk.Label(linha2, text="y =").pack(side=tk.LEFT)
+entry_sistema_c2 = tk.Entry(linha2, width=5)
 entry_sistema_c2.pack(side=tk.LEFT)
-tk.Button(frame_sistema_linear, text="Calcular", command=resolver_sistema_linear).pack(side=tk.LEFT)
+tk.Button(frame_sistema_linear, text="Calcular", command=resolver_sistema_linear).pack(pady=5)
 
 root.mainloop()
